@@ -1,41 +1,48 @@
-name: Build Android APK
+name: Android CI
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
   workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
-      - name: Generate debug keystore
-        run: |
-          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
+      - name: Validate Wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Make gradlew executable
-        run: chmod +x ./gradlew
+        run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew clean assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Reports on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-reports
+          path: |
+            **/build/reports/**
+            **/build/test-results/**
