@@ -1,0 +1,6 @@
+{
+  "name": "SMS Connector",
+  "description": "Securely collect selected incoming SMS messages and upload them to a backend API.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
